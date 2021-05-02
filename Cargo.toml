@@ -9,7 +9,7 @@ license = "MIT"
 
 [dependencies]
 ncollide3d = "*"
-bvh = "0.3"
 nalgebra = "0.26"
 anyhow = "*"
 thiserror = "*"
+art-util = { path = "/home/mason/workspace/art-util/" }
