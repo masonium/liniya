@@ -76,7 +76,7 @@ impl LatSphere {
             .map(|i| {
                 let theta = std::f64::consts::TAU / (N_SEGMENTS as f64) * i as f64;
                 let (s, c) = theta.sin_cos();
-                Point3::new(radius_to_axis * s, y, radius_to_axis * c)
+                self.pos + Vector3::new(radius_to_axis * s, y, radius_to_axis * c)
             })
             .collect()
     }
@@ -105,7 +105,7 @@ impl Shape for LatSphere {
         paths
     }
     fn bounding_box(&self) -> AABB<f64> {
-        let half_extents = Vector3::new(self.radius, self.radius, self.radius) * 0.5;
+        let half_extents = Vector3::new(self.radius, self.radius, self.radius);
         AABB::from_half_extents(self.pos, half_extents)
     }
 }
