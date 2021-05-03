@@ -13,3 +13,5 @@ nalgebra = "0.26"
 anyhow = "*"
 thiserror = "*"
 art-util = { path = "/home/mason/workspace/art-util/" }
+approx = "*"
+svg = "*"

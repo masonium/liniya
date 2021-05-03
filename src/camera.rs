@@ -7,34 +7,81 @@ use art_util::{frustum::ClipResult, Frustum};
 /// rendering.
 #[derive(Clone, Debug)]
 pub struct Camera {
-    world_camera_iso: na::Isometry3<f64>,
-    // world_camera_matrix: Matrix4<f64>,
-    projection: na::Perspective3<f64>,
+    view_iso: na::Isometry3<f64>,
+
+    /// projection matrix, usually either perspective or orthographic
+    projection: na::Projective3<f64>,
 
     /// frustum derived from view-projection matrix
     frustum: Frustum<f64>,
+
+    /// maximum screen space distance for line segments to be
+    /// rendered.
+    resolution: f64,
 }
 
 impl Camera {
-    /// Create a new camera with perepctive projection.
-    pub fn look_at_perspective(
-        origin: &Point3<f64>,
-        target: &Point3<f64>,
-        up: &Vector3<f64>,
-        fov: f64,
-        aspect: f64,
-        znear: f64,
-        zfar: f64,
-    ) -> Camera {
-        let iso = na::geometry::Isometry3::look_at_rh(origin, target, up);
-        let proj = na::geometry::Perspective3::new(aspect, fov, znear, zfar);
-        let clip = iso.to_matrix() * proj.as_matrix();
-        let frustum = Frustum::from_clip_matrix(&clip);
+    /// Returns a default camera that can be modified.
+    pub fn new() -> Camera {
+        let proj =
+            *na::Perspective3::new(1.0, std::f64::consts::FRAC_PI_2, 1.0, 10.0).as_projective();
         Camera {
-            world_camera_iso: iso,
+            view_iso: na::Isometry3::identity(),
+            frustum: Frustum::from_clip_matrix(proj.matrix()),
             projection: proj,
-            frustum,
+            resolution: 0.001,
         }
+    }
+    /// Update the internal frustum.
+    ///
+    /// Must be called whenver the view or projection matrices are
+    /// update.
+    fn update_frustum(self) -> Self {
+        let clip_matrix = self.projection.matrix() * self.view_iso.to_matrix();
+        let frustum = Frustum::from_clip_matrix(&clip_matrix);
+        Self { frustum, ..self }
+    }
+
+    /// Return a modified version of the camera with new look_at
+    /// parameters.
+    pub fn look_at(self, origin: &Point3<f64>, target: &Point3<f64>, up: &Vector3<f64>) -> Camera {
+        let new_wc = Isometry3::look_at_rh(origin, target, up);
+        Camera {
+            view_iso: new_wc,
+            ..self
+        }
+        .update_frustum()
+    }
+
+    /// Return a modified version of the camera with perepctive projection.
+    pub fn perspective(self, fov: f64, aspect: f64, znear: f64, zfar: f64) -> Camera {
+        let projection = *na::geometry::Perspective3::new(aspect, fov, znear, zfar).as_projective();
+        Camera { projection, ..self }.update_frustum()
+    }
+
+    /// Return a modified version of the camera with orthographic projection.
+    pub fn ortho(self, half_width: f64, half_height: f64, znear: f64, zfar: f64) -> Camera {
+        let projection = *na::geometry::Orthographic3::new(
+            -half_width,
+            half_width,
+            -half_height,
+            half_height,
+            znear,
+            zfar,
+        )
+        .as_projective();
+        Camera { projection, ..self }.update_frustum()
+    }
+
+    pub fn set_resolution(self, res: f64) -> Camera {
+        Camera {
+            resolution: res,
+            ..self
+        }
+    }
+
+    pub fn resolution(&self) -> f64 {
+        self.resolution
     }
 
     /// Clip a path into separate paths within the cameras view.
@@ -57,7 +104,9 @@ impl Camera {
                 }
                 ClipResult::Inside(_, p1) => {
                     // We must already have been building a previous path.
-                    assert!(!current_path.is_empty());
+                    if current_path.is_empty() {
+                        current_path.push(p0);
+                    }
 
                     // just append the lastest point onto it.
                     current_path.push(p1);
@@ -110,7 +159,9 @@ impl Camera {
     /// Return true iff the bounding box has any intersection with the
     /// camera's frustum.
     pub fn is_aabb_visible(&self, bb: &AABB<f64>) -> bool {
-        todo!("implement occlusion")
+        // TODO: This implementation is technically work, but it will
+        // definitely handle most cases.
+        self.is_point_visible(&bb.center())
     }
 
     /// Project a point into device coordinates.
@@ -120,17 +171,36 @@ impl Camera {
 
     /// Unproject a point from NDC to world coordinates.
     pub fn unproject(&self, ndc_point: &Point3<f64>) -> Point3<f64> {
-        self.world_camera_iso
-            .inverse_transform_point(&self.projection.unproject_point(ndc_point))
+        self.view_iso
+            .inverse_transform_point(&self.projection.inverse_transform_point(&ndc_point))
     }
 
     /// Project a point into device coordinates, including the 3d coordinate.
     pub fn project_3d(&self, world_point: &Point3<f64>) -> Point3<f64> {
         // transform the point into camera space
-        let camera_point = self.world_camera_iso.transform_point(world_point);
+        let camera_point = self.view_iso.transform_point(world_point);
 
         // transform the camera space point to NDC
-        let ndc = self.projection.project_point(&camera_point);
-        ndc
+        self.projection.transform_point(&camera_point)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    // use nalgebra as na;
+    // use approx::{abs_diff_eq, AbsDiff, AbsDiffEq};
+
+    #[test]
+    fn test_visiblity() {
+        let cam = Camera::new().ortho(2.0, 2.0, 1.0, 10.0).look_at(
+            &Point3::new(0.0, 0.0, 5.0),
+            &Point3::new(0.0, 0.0, 0.0),
+            &Vector3::new(0.0, 1.0, 0.0),
+        );
+
+        assert!(cam.is_point_visible(&Point3::new(0.0, 0.0, 0.0)));
+        assert!(cam.is_point_visible(&Point3::new(0.0, 0.0, 4.0)));
+        assert!(!cam.is_point_visible(&Point3::new(0.0, 0.0, 6.0)));
     }
 }

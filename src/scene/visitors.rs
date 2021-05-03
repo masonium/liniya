@@ -1,15 +1,11 @@
 //! Define visitors for use when rendering scenes.
-use crate::{
-    camera::Camera,
-    common::*,
-    shape::Shape,
-};
+use super::{scene::RenderPath, Scene};
+use crate::{camera::Camera, common::*, shape::Shape};
 use na::Isometry;
 use ncollide3d::{
     partitioning::{BestFirstVisitStatus, BestFirstVisitor, VisitStatus, Visitor},
     query::{Ray, RayCast},
 };
-use super::{scene::RenderPath, Scene};
 
 /// Visitor for rendering paths within view of the camera
 pub struct CameraVisiblePathCollector<'a> {
@@ -18,19 +14,15 @@ pub struct CameraVisiblePathCollector<'a> {
     /// camera space to render from
     camera: Camera,
 
-    /// screen resolution
-    screen_res: f64,
-
     /// Final paths rendered by this visitor
     pub rendered_paths: Vec<RenderPath>,
 }
 
 impl<'a> CameraVisiblePathCollector<'a> {
-    pub fn new(scene: &'a Scene, camera: Camera, screen_res: f64) -> Self {
+    pub fn new(scene: &'a Scene, camera: Camera) -> Self {
         CameraVisiblePathCollector {
             camera,
-	    screen_res,
-	    scene,
+            scene,
             rendered_paths: vec![],
         }
     }
@@ -40,9 +32,10 @@ impl<'a> Visitor<Box<dyn Shape>, AABB<f64>> for CameraVisiblePathCollector<'a> {
     fn visit(&mut self, bv: &AABB<f64>, data: Option<&Box<dyn Shape>>) -> VisitStatus {
         if self.camera.is_aabb_visible(bv) {
             if let Some(shape) = data {
-		for path in shape.paths() {
-		    self.rendered_paths.extend(self.scene.render_path(&path, &self.camera, self.screen_res));
-		}
+                for path in shape.paths() {
+                    self.rendered_paths
+                        .extend(self.scene.render_path(&path, &self.camera));
+                }
             }
             VisitStatus::Continue
         } else {
