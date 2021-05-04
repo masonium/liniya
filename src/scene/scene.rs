@@ -157,7 +157,9 @@ impl Scene {
                 None
             });
             if let Some(fp) = finished_path {
-                paths.push(fp);
+		if fp.len() > 1 {
+                    paths.push(fp);
+		}
             }
             path_state = new_path_state;
         }
@@ -185,6 +187,7 @@ impl Scene {
         let origin = camera.unproject(&proj_origin);
         let proj_far = Point3::new(proj_point.x, proj_point.y, 1.0);
         let far = camera.unproject(&proj_far);
+
         let unnorm_dir = point - origin;
         let target_toi = unnorm_dir.norm();
 
@@ -192,9 +195,9 @@ impl Scene {
         let max_toi = (far - origin).norm();
 
         let mut sov = SceneOcclusionVisitor::new(&ray, target_toi, max_toi);
-        let res = self.bvt.best_first_search(&mut sov);
+        self.bvt.visit(&mut sov);
 
-        res.map(|(_, is_visible)| is_visible).unwrap_or(true)
+        !sov.is_occluded()
     }
 
     /// Render a 3d-path onto one or more 2d paths in normalized
