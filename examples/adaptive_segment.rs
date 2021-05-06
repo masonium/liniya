@@ -28,11 +28,11 @@ fn main() {
     );
 
     let scene = SceneBuilder::new()
-	.add(b)
-	.add(b2)
-	.add(b3)
+        .add(b)
+        .add(b2)
+        .add(b3)
         .add(sphere2)
-	.build();
+        .build();
 
     let w = 800.0;
     let h = 600.0;

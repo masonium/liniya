@@ -1,7 +1,10 @@
 //! Perspective or orthographic cameras for rendering scenes
 use super::common::*;
 use crate::shape::Path;
-use art_util::{frustum::{ClipResult, ClipResultPartial}, Frustum};
+use art_util::{
+    frustum::{ClipResult, ClipResultPartial},
+    Frustum,
+};
 
 /// `Camera` determines the view and projection of a scene during
 /// rendering.
@@ -125,14 +128,14 @@ impl Camera {
                         ClipResultPartial::Suffix => {
                             assert!(current_path.is_empty());
                             //current_path.push(c0);
-			    current_path.push(c1);
+                            current_path.push(c1);
                         }
                         // We're ending a path.
                         // Add it to the list of clipped paths.
                         ClipResultPartial::Prefix => {
                             if !current_path.is_empty() {
-				current_path.push(c0);
-			    }
+                                current_path.push(c0);
+                            }
                             current_path.push(c1);
                             clipped_paths.push(current_path);
                             current_path = vec![];

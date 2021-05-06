@@ -157,9 +157,9 @@ impl Scene {
                 None
             });
             if let Some(fp) = finished_path {
-		if fp.len() > 1 {
+                if fp.len() > 1 {
                     paths.push(fp);
-		}
+                }
             }
             path_state = new_path_state;
         }

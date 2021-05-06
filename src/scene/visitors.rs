@@ -73,34 +73,33 @@ impl<'b> SceneOcclusionVisitor<'b> {
             ray,
             target_toi,
             max_toi,
-	    is_occluded: false,
+            is_occluded: false,
         }
     }
 
     pub fn is_occluded(&self) -> bool {
-	self.is_occluded
+        self.is_occluded
     }
 }
 
 impl<'b> Visitor<Box<dyn Shape>, AABB<f64>> for SceneOcclusionVisitor<'b> {
-    fn visit(
-        &mut self,
-        bv: &AABB<f64>,
-        data: Option<&Box<dyn Shape>>,
-    ) -> VisitStatus {
-        if bv.toi_with_ray(&Isometry::identity(), self.ray, self.max_toi, true).is_none() {
-	    return VisitStatus::Stop;
-	}
+    fn visit(&mut self, bv: &AABB<f64>, data: Option<&Box<dyn Shape>>) -> VisitStatus {
+        if bv
+            .toi_with_ray(&Isometry::identity(), self.ray, self.max_toi, true)
+            .is_none()
+        {
+            return VisitStatus::Stop;
+        }
 
-        // If the node has data in it, check against 
+        // If the node has data in it, check against
         if let Some(shape) = data {
             if let Some(result) = shape.intersect(self.ray, self.max_toi) {
                 if result.t < self.target_toi - 1e-5 {
                     self.is_occluded = true;
-		    return VisitStatus::ExitEarly;
-		}
+                    return VisitStatus::ExitEarly;
+                }
             }
         }
-	VisitStatus::Continue
+        VisitStatus::Continue
     }
 }
