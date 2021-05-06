@@ -1,6 +1,6 @@
 //! Trace-able shapes to render
 use super::common::*;
-use ncollide3d::{bounding_volume::AABB, query::{Ray, RayCast}, shape::Cuboid};
+use ncollide3d::{bounding_volume::AABB, query::{Ray, RayCast}};
 
 pub type Path = Vec<Point3<f64>>;
 pub type Paths = Vec<Path>;
@@ -140,7 +140,6 @@ impl Shape for BoxOutline {
     fn intersect(&self, ray: &Ray<f64>, max_toi: f64) -> Option<Intersection> {
         self.aabb.toi_with_ray(&Isometry3::identity(), ray, max_toi, true)
 	    .map(|t| { 
-		eprintln!("Ray intersects at {}", t);
 		Intersection {
                     t,
                     point: ray.point_at(t),

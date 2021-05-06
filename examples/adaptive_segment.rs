@@ -3,7 +3,7 @@ extern crate liniya;
 use liniya::{
     camera::Camera,
     scene::{Scene, SceneBuilder},
-    shape::LatSphere,
+    shape::{BoxOutline, LatSphere},
 };
 use nalgebra::{Point2, Point3, Vector3};
 
@@ -16,18 +16,23 @@ fn format_polyline(p: &Vec<Point2<f64>>, w: f64, h: f64) -> String {
 }
 
 fn main() {
-    let sphere = LatSphere::new(
-        &Point3::new(0.0, 0.0, 0.0),
-        2.0,
-        std::f64::consts::PI / 10.0,
-    );
+    let unit_size = Vector3::new(0.5, 0.5, 0.5);
+    let b = BoxOutline::new(Point3::new(0.0, 0.0, 0.0), unit_size);
+    let b2 = BoxOutline::new(Point3::new(-2.0, 0.0, 0.0), unit_size);
+    let b3 = BoxOutline::new(Point3::new(2.0, 0.0, 0.0), unit_size);
+
     let sphere2 = LatSphere::new(
-        &Point3::new(-2.0, 2.0, 0.0),
+        &Point3::new(2.0, 2.0, 0.0),
         2.0,
         std::f64::consts::PI / 10.0,
     );
 
-    let scene = SceneBuilder::new().add(sphere).add(sphere2).build();
+    let scene = SceneBuilder::new()
+	.add(b)
+	.add(b2)
+	.add(b3)
+        .add(sphere2)
+	.build();
 
     let w = 800.0;
     let h = 600.0;
@@ -38,7 +43,7 @@ fn main() {
             &Vector3::new(0.0, 1.0, 0.0),
         )
         .perspective(std::f64::consts::FRAC_PI_2, w / h, 1.0, 10.0)
-        .set_resolution(0.1);
+        .set_resolution(0.01);
 
     let r = scene.render(&camera);
 

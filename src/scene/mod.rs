@@ -1,3 +1,4 @@
+//! Export Scene and SceneBuilder class.
 pub mod scene;
 mod visitors;
 

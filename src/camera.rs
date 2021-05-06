@@ -1,7 +1,7 @@
 //! Perspective or orthographic cameras for rendering scenes
 use super::common::*;
 use crate::shape::Path;
-use art_util::{frustum::ClipResult, Frustum};
+use art_util::{frustum::{ClipResult, ClipResultPartial}, Frustum};
 
 /// `Camera` determines the view and projection of a scene during
 /// rendering.
@@ -102,7 +102,7 @@ impl Camera {
 
                     // No need to do anything else.
                 }
-                ClipResult::Inside(_, p1) => {
+                ClipResult::Inside(p0, p1) => {
                     // We must already have been building a previous path.
                     if current_path.is_empty() {
                         current_path.push(p0);
@@ -111,32 +111,31 @@ impl Camera {
                     // just append the lastest point onto it.
                     current_path.push(p1);
                 }
-                ClipResult::Partial(c0_in, c0, c1_in, c1) => {
-                    match (c0_in, c1_in) {
+                ClipResult::Partial(partial_type, c0, c1) => {
+                    match partial_type {
                         // We're begining and ending a path, as the
                         // clip is strictly internal to the segment.
                         // Don't bother creating an intermediate current_path.
-                        (false, false) => {
+                        ClipResultPartial::Infix => {
                             assert!(current_path.is_empty());
                             clipped_paths.push(vec![c0, c1]);
                         }
                         // We're starting a path.
                         //
-                        (false, true) => {
+                        ClipResultPartial::Suffix => {
                             assert!(current_path.is_empty());
-                            current_path.push(c0);
+                            //current_path.push(c0);
+			    current_path.push(c1);
                         }
                         // We're ending a path.
                         // Add it to the list of clipped paths.
-                        (true, false) => {
-                            assert!(!current_path.is_empty());
+                        ClipResultPartial::Prefix => {
+                            if !current_path.is_empty() {
+				current_path.push(c0);
+			    }
                             current_path.push(c1);
                             clipped_paths.push(current_path);
                             current_path = vec![];
-                        }
-                        // This is not allowed by Partial.
-                        (true, true) => {
-                            panic!("Frustum::clip_line returned an unexpected Partial result.")
                         }
                     }
                 }
@@ -144,7 +143,7 @@ impl Camera {
         }
         // If we have a path still in construction, it must be
         // finished, and we can add it to our clipped paths
-        if current_path.len() > 0 {
+        if current_path.len() > 1 {
             clipped_paths.push(current_path);
         }
 
