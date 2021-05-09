@@ -2,8 +2,8 @@ extern crate liniya;
 
 use liniya::{
     camera::Camera,
-    scene::{Scene, SceneBuilder},
-    shape::{BoxOutline, LatSphere},
+    scene::SceneBuilder,
+    shape::{BoxOutline, Sphere},
 };
 use nalgebra::{Point2, Point3, Vector3};
 
@@ -21,10 +21,11 @@ fn main() {
     let b2 = BoxOutline::new(Point3::new(-2.0, 0.0, 0.0), unit_size);
     let b3 = BoxOutline::new(Point3::new(2.0, 0.0, 0.0), unit_size);
 
-    let sphere2 = LatSphere::new(
+    let sphere2 = Sphere::new(
         &Point3::new(2.0, 2.0, 0.0),
         2.0,
-        std::f64::consts::PI / 10.0,
+        Some(std::f64::consts::PI / 10.0),
+	None
     );
 
     let scene = SceneBuilder::new()

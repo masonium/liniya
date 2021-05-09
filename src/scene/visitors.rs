@@ -94,7 +94,7 @@ impl<'b> Visitor<Box<dyn Shape>, AABB<f64>> for SceneOcclusionVisitor<'b> {
         // If the node has data in it, check against
         if let Some(shape) = data {
             if let Some(result) = shape.intersect(self.ray, self.max_toi) {
-                if result.t < self.target_toi - 1e-5 {
+                if result < self.target_toi - 1e-5 {
                     self.is_occluded = true;
                     return VisitStatus::ExitEarly;
                 }
