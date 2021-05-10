@@ -32,7 +32,7 @@ impl<'a> Visitor<Box<dyn Shape>, AABB<f64>> for CameraVisiblePathCollector<'a> {
     fn visit(&mut self, bv: &AABB<f64>, data: Option<&Box<dyn Shape>>) -> VisitStatus {
         if self.camera.is_aabb_visible(bv) {
             if let Some(shape) = data {
-                for path in shape.paths() {
+                for path in shape.paths(&self.camera) {
                     self.rendered_paths
                         .extend(self.scene.render_path(&path, &self.camera));
                 }

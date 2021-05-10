@@ -2,6 +2,7 @@ mod box_outline;
 mod sphere;
 
 use super::common::*;
+use crate::camera::Camera;
 use ncollide3d::{
     bounding_volume::AABB,
     query::Ray,
@@ -21,7 +22,7 @@ pub trait Shape {
     fn intersect(&self, ray: &Ray<f64>, max_toi: f64) -> Option<f64>;
 
     /// Return the set of paths that lie on the shape to render.
-    fn paths(&self) -> Paths;
+    fn paths(&self, camera: &Camera) -> Paths;
 
     /// Return the bounding volume for this shape.
     fn bounding_box(&self) -> AABB<f64>;

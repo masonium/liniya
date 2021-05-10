@@ -1,6 +1,6 @@
 //! Box with paths as outlines..
 use crate::common::*;
-use crate::shape::{Shape, Path};
+use crate::shape::{Camera, Shape, Path};
 
 /// Box with paths on all of the edges.
 pub struct BoxOutline {
@@ -30,7 +30,7 @@ impl Shape for BoxOutline {
             .toi_with_ray(&Isometry3::identity(), ray, max_toi, true)
     }
 
-    fn paths(&self) -> Vec<Path> {
+    fn paths(&self, _camera: &Camera) -> Vec<Path> {
         let mut corners = Vec::with_capacity(8);
         for i in &[-1.0, 1.0] {
             for j in &[-1.0, 1.0] {
