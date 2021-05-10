@@ -1,6 +1,6 @@
 //! Box with paths as outlines..
 use crate::common::*;
-use crate::shape::{Camera, Shape, Path};
+use crate::shape::{Camera, Path, Shape};
 
 /// Box with paths on all of the edges.
 pub struct BoxOutline {

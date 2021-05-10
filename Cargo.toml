@@ -7,6 +7,9 @@ license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["svg"]
+
 [dependencies]
 ncollide3d = "0.28"
 nalgebra = "0.25"
@@ -14,4 +17,11 @@ anyhow = "*"
 thiserror = "*"
 art-util = { path = "/home/mason/workspace/art-util/" }
 approx = "*"
+
+[dependencies.svg]
+optional = true
+version = "*"
+
+[dev-dependencies]
 svg = "*"
+fastrand = "*"

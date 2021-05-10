@@ -38,6 +38,18 @@ impl SceneBuilder {
 
 pub(crate) type RenderPath = Vec<Point2<f64>>;
 
+/// Given a RenderPath (in NDC-space), transform the path into [0, w]
+/// ✕ [0, h] coordinate space (flipping the y-axis in the processes)
+/// and format a 'd' string appropriate for an SVG polyline element.
+#[cfg(feature = "svg")]
+pub fn format_svg_poly_data(p: &RenderPath, w: f64, h: f64) -> String {
+    let strs: Vec<String> = p
+        .iter()
+        .map(|p| format!("{:.4},{:.4}", (p.x + 1.0) * w / 2.0, (1.0 - p.y) * h / 2.0))
+        .collect();
+    strs.join(" ")
+}
+
 /// Encapsulate the state of the current path being built in
 /// `Scene::render_segment_adaptive`.
 #[derive(Clone, Debug)]
@@ -232,14 +244,30 @@ impl Scene {
     }
 
     /// Return a collection of paths that visible from the provided
-    /// camera, at the specific resolution.
-    ///
-    /// Each path segment is automatically until the segment, as
-    /// projected into screen space, meets the desired resolution.
+    /// camera.
     pub fn render(&self, camera: &Camera) -> Vec<RenderPath> {
         let mut visitor = CameraVisiblePathCollector::new(self, camera.clone());
         self.bvt.visit(&mut visitor);
 
         visitor.rendered_paths
+    }
+
+    /// Return a collection of paths that visible from the provided
+    /// camera into an svg group node.
+    ///
+    /// The 2d- paths are transformed from NDC coordinates to the
+    /// space [0, `dim.0`] ✕ [0, `dim.1.`], including flipping the
+    /// y-axis.
+    #[cfg(feature = "svg")]
+    pub fn render_to_svg(&self, camera: &Camera, dim: (f64, f64)) -> svg::node::element::Group {
+        let paths = self.render(camera);
+        let mut g = svg::node::element::Group::new();
+        for p in paths {
+            g = g.add(
+                svg::node::element::Polyline::new()
+                    .set("d", format_svg_poly_data(&p, dim.0, dim.1)),
+            );
+        }
+        g
     }
 }

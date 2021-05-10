@@ -3,10 +3,7 @@ mod sphere;
 
 use super::common::*;
 use crate::camera::Camera;
-use ncollide3d::{
-    bounding_volume::AABB,
-    query::Ray,
-};
+use ncollide3d::{bounding_volume::AABB, query::Ray};
 
 pub type Path = Vec<Point3<f64>>;
 pub type Paths = Vec<Path>;

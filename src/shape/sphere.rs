@@ -1,5 +1,5 @@
 use crate::common::*;
-use crate::shape::{Camera, Shape, Path, Paths};
+use crate::shape::{Camera, Path, Paths, Shape};
 use ncollide3d::query::RayCast;
 
 /// Sphere with lattitude and longitude lines oriented around the y-axis.
@@ -59,21 +59,20 @@ impl Shape for Sphere {
         format!("Sphere")
     }
     fn intersect(&self, ray: &Ray<f64>, max_toi: f64) -> Option<f64> {
-        self.shape
-            .toi_with_ray(&self.transform, ray, max_toi, true)
+        self.shape.toi_with_ray(&self.transform, ray, max_toi, true)
     }
 
     fn paths(&self, _camera: &Camera) -> Paths {
-	let mut paths = vec![];
-	if let Some(lat_angle) = self.lat_angle {
+        let mut paths = vec![];
+        if let Some(lat_angle) = self.lat_angle {
             paths.push(self.latitude_path(0.0));
             let mut rising_angle = 0.0;
             while rising_angle < std::f64::consts::FRAC_PI_2 {
-		paths.push(self.latitude_path(rising_angle));
-		paths.push(self.latitude_path(-rising_angle));
-		rising_angle += lat_angle;
+                paths.push(self.latitude_path(rising_angle));
+                paths.push(self.latitude_path(-rising_angle));
+                rising_angle += lat_angle;
             }
-	}
+        }
 
         paths
     }
