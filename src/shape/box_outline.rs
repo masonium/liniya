@@ -20,10 +20,9 @@ impl BoxOutline {
     }
 
     pub fn from_extents(min_p: Point3<f64>, max_p: Point3<f64>) -> Self {
-	let half_extents = (max_p - min_p) * 0.5;
-	Self::new(min_p + half_extents, half_extents)
+        let half_extents = (max_p - min_p) * 0.5;
+        Self::new(min_p + half_extents, half_extents)
     }
-
 }
 
 impl Shape for BoxOutline {

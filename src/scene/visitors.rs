@@ -1,4 +1,6 @@
 //! Define visitors for use when rendering scenes.
+use std::borrow::Borrow;
+
 use super::{scene::RenderPath, Scene};
 use crate::{camera::Camera, common::*, shape::Shape};
 use na::Isometry;
@@ -63,12 +65,7 @@ pub struct SceneOcclusionVisitor<'b> {
 
 impl<'b> SceneOcclusionVisitor<'b> {
     /// Creates a new `RayIntersectionCostFnVisitor`.
-    pub fn new(
-        ray: &'b Ray<f64>,
-        target_toi: f64,
-        max_toi: f64,
-        //broad_phase: &'a dyn BroadPhase<f64, AABB<f64>, Box<dyn Shape>>,
-    ) -> SceneOcclusionVisitor<'b> {
+    pub fn new(ray: &'b Ray<f64>, target_toi: f64, max_toi: f64) -> SceneOcclusionVisitor<'b> {
         SceneOcclusionVisitor {
             ray,
             target_toi,
@@ -77,6 +74,7 @@ impl<'b> SceneOcclusionVisitor<'b> {
         }
     }
 
+    /// Return true if the test point was occluded.
     pub fn is_occluded(&self) -> bool {
         self.is_occluded
     }

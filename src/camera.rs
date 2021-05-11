@@ -91,7 +91,7 @@ impl Camera {
 
     /// Return the frustum of the camera
     pub fn frustum(&self) -> &Frustum<f64> {
-	&self.frustum
+        &self.frustum
     }
 
     /// Clip a path into separate paths within the cameras view.
@@ -174,14 +174,20 @@ impl Camera {
     /// AABBs near but behind the frustum are not appropriately
     /// culled. In practice, this should not be a major issue.
     pub fn is_aabb_visible(&self, bb: &AABB<f64>) -> bool {
-	for plane in &self.frustum.planes{
-	    match box_plane_intersection(bb, plane) {
-	        crate::util::BoxPlaneTest::Inside => { continue; }
-	        crate::util::BoxPlaneTest::Intersects => { return true; }
-	        crate::util::BoxPlaneTest::Outside => { return false; }
-	    }
-	}
-	true
+        for plane in &self.frustum.planes {
+            match box_plane_intersection(bb, plane) {
+                crate::util::BoxPlaneTest::Inside => {
+                    continue;
+                }
+                crate::util::BoxPlaneTest::Intersects => {
+                    return true;
+                }
+                crate::util::BoxPlaneTest::Outside => {
+                    return false;
+                }
+            }
+        }
+        true
     }
 
     /// Project a point into device coordinates.
