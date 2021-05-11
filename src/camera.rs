@@ -1,6 +1,7 @@
 //! Perspective or orthographic cameras for rendering scenes
 use super::common::*;
 use crate::shape::Path;
+use crate::util::box_plane_intersection;
 use art_util::{
     frustum::{ClipResult, ClipResultPartial},
     Frustum,
@@ -83,8 +84,14 @@ impl Camera {
         }
     }
 
+    /// Return the resolution of the camera.
     pub fn resolution(&self) -> f64 {
         self.resolution
+    }
+
+    /// Return the frustum of the camera
+    pub fn frustum(&self) -> &Frustum<f64> {
+	&self.frustum
     }
 
     /// Clip a path into separate paths within the cameras view.
@@ -160,10 +167,21 @@ impl Camera {
 
     /// Return true iff the bounding box has any intersection with the
     /// camera's frustum.
+    ///
+    /// # Remarks
+    ///
+    /// This implementation suffers the common problem that large
+    /// AABBs near but behind the frustum are not appropriately
+    /// culled. In practice, this should not be a major issue.
     pub fn is_aabb_visible(&self, bb: &AABB<f64>) -> bool {
-        // TODO: This implementation is technically work, but it will
-        // definitely handle most cases.
-        self.is_point_visible(&bb.center())
+	for plane in &self.frustum.planes{
+	    match box_plane_intersection(bb, plane) {
+	        crate::util::BoxPlaneTest::Inside => { continue; }
+	        crate::util::BoxPlaneTest::Intersects => { return true; }
+	        crate::util::BoxPlaneTest::Outside => { return false; }
+	    }
+	}
+	true
     }
 
     /// Project a point into device coordinates.
