@@ -1,6 +1,4 @@
 //! Define visitors for use when rendering scenes.
-use std::borrow::Borrow;
-
 use super::{scene::RenderPath, Scene};
 use crate::{camera::Camera, common::*, shape::Shape};
 use na::Isometry;
@@ -56,20 +54,16 @@ pub struct SceneOcclusionVisitor<'b> {
     /// target time-of-impact of the original point
     target_toi: f64,
 
-    /// Maximum time-of-impact of the ray with the objects.
-    max_toi: f64,
-
     /// Final value dictating whether the point was occluded.
     is_occluded: bool,
 }
 
 impl<'b> SceneOcclusionVisitor<'b> {
     /// Creates a new `RayIntersectionCostFnVisitor`.
-    pub fn new(ray: &'b Ray<f64>, target_toi: f64, max_toi: f64) -> SceneOcclusionVisitor<'b> {
+    pub fn new(ray: &'b Ray<f64>, target_toi: f64) -> SceneOcclusionVisitor<'b> {
         SceneOcclusionVisitor {
             ray,
             target_toi,
-            max_toi,
             is_occluded: false,
         }
     }
@@ -83,7 +77,7 @@ impl<'b> SceneOcclusionVisitor<'b> {
 impl<'b> Visitor<Box<dyn Shape>, AABB<f64>> for SceneOcclusionVisitor<'b> {
     fn visit(&mut self, bv: &AABB<f64>, data: Option<&Box<dyn Shape>>) -> VisitStatus {
         if bv
-            .toi_with_ray(&Isometry::identity(), self.ray, self.max_toi, true)
+            .toi_with_ray(&Isometry::identity(), self.ray, self.target_toi, true)
             .is_none()
         {
             return VisitStatus::Stop;
@@ -91,7 +85,7 @@ impl<'b> Visitor<Box<dyn Shape>, AABB<f64>> for SceneOcclusionVisitor<'b> {
 
         // If the node has data in it, check against
         if let Some(shape) = data {
-            if let Some(result) = shape.intersect(self.ray, self.max_toi) {
+            if let Some(result) = shape.intersect(self.ray, self.target_toi) {
                 if result < self.target_toi - 1e-5 {
                     self.is_occluded = true;
                     return VisitStatus::ExitEarly;

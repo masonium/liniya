@@ -96,11 +96,11 @@ impl Camera {
 
     /// Clip a path into separate paths within the cameras view.
     pub(crate) fn clip_path(&self, path: &Path) -> Vec<Path> {
-        let mut clipped_paths: Vec<Path> = vec![];
         if path.len() < 2 {
             return vec![];
         }
 
+        let mut clipped_paths: Vec<Path> = vec![];
         let mut current_path: Path = vec![];
         for i in 1..path.len() {
             let (p0, p1) = (path[i - 1], path[i]);
@@ -113,12 +113,12 @@ impl Camera {
                     // No need to do anything else.
                 }
                 ClipResult::Inside(p0, p1) => {
-                    // We must already have been building a previous path.
+                    // We may or may not be starting a path.
                     if current_path.is_empty() {
                         current_path.push(p0);
                     }
 
-                    // just append the lastest point onto it.
+                    // Always continue the path with the last endpoint.
                     current_path.push(p1);
                 }
                 ClipResult::Partial(partial_type, c0, c1) => {
@@ -134,13 +134,13 @@ impl Camera {
                         //
                         ClipResultPartial::Suffix => {
                             assert!(current_path.is_empty());
-                            //current_path.push(c0);
+                            current_path.push(c0);
                             current_path.push(c1);
                         }
                         // We're ending a path.
                         // Add it to the list of clipped paths.
                         ClipResultPartial::Prefix => {
-                            if !current_path.is_empty() {
+                            if current_path.is_empty() {
                                 current_path.push(c0);
                             }
                             current_path.push(c1);
@@ -153,7 +153,8 @@ impl Camera {
         }
         // If we have a path still in construction, it must be
         // finished, and we can add it to our clipped paths
-        if current_path.len() > 1 {
+        if !current_path.is_empty() {
+            assert!(current_path.len() > 1);
             clipped_paths.push(current_path);
         }
 

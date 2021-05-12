@@ -3,6 +3,7 @@ use super::visitors::{CameraVisiblePathCollector, SceneOcclusionVisitor};
 use crate::common::*;
 use crate::shape::Shape;
 use crate::{camera::Camera, shape::Path};
+use approx::assert_relative_eq;
 use ncollide3d::bounding_volume::AABB;
 use ncollide3d::{
     partitioning::{BVH, BVT},
@@ -118,7 +119,13 @@ pub fn split_segment_adaptive(camera: &Camera, p0: &Point3<f64>, p1: &Point3<f64
     } else {
         vec![proj_p0, proj_p1]
     };
-    let segments = proj_segments.iter().map(|p| camera.unproject(p)).collect();
+    let segments: Vec<_> = proj_segments.iter().map(|p| camera.unproject(p)).collect();
+    // demand that the segments lie on a line in 3d-space.
+    let d = (segments[1] - segments[0]).normalize();
+    for i in 2..segments.len() {
+        let d2 = (segments[i] - segments[0]).normalize();
+        assert_relative_eq!(d.dot(&d2), 1.0);
+    }
 
     (segments, proj_segments)
 }
@@ -154,6 +161,7 @@ impl Scene {
         curr_path: Option<RenderPath>,
     ) -> Option<RenderPath> {
         let (points, proj_points) = split_segment_adaptive(camera, p0, p1);
+        //eprintln!("Split segment ({}, {}) into {} points", p0, p1, points.len());
 
         let (first_point, mut path_state) = match curr_path {
             Some(p) if !p.is_empty() => (1, SegmentPathState::Started(p)),
@@ -162,7 +170,7 @@ impl Scene {
 
         for i in first_point..points.len() {
             let is_visible = self.is_point_visible(camera, &points[i], proj_points[i]);
-
+            //eprint!("{}", if is_visible { "―" } else { " " });
             let (new_path_state, finished_path) = path_state.update(if is_visible {
                 Some(proj_points[i].xy())
             } else {
@@ -175,7 +183,6 @@ impl Scene {
             }
             path_state = new_path_state;
         }
-
         path_state.into_path()
     }
 
@@ -197,16 +204,13 @@ impl Scene {
         // near plane.
         let proj_origin = Point3::new(proj_point.x, proj_point.y, -1.0);
         let origin = camera.unproject(&proj_origin);
-        let proj_far = Point3::new(proj_point.x, proj_point.y, 1.0);
-        let far = camera.unproject(&proj_far);
 
         let unnorm_dir = point - origin;
         let target_toi = unnorm_dir.norm();
 
         let ray = Ray::new(origin, unnorm_dir / target_toi);
-        let max_toi = (far - origin).norm();
 
-        let mut sov = SceneOcclusionVisitor::new(&ray, target_toi, max_toi);
+        let mut sov = SceneOcclusionVisitor::new(&ray, target_toi);
         self.bvt.visit(&mut sov);
 
         !sov.is_occluded()
@@ -216,7 +220,6 @@ impl Scene {
     /// coordinates.
     pub fn render_path(&self, path: &Vec<Point3<f64>>, camera: &Camera) -> Vec<Vec<Point2<f64>>> {
         let clipped_paths = camera.clip_path(path);
-
         let mut all_paths = vec![];
 
         for clipped_path in clipped_paths {
