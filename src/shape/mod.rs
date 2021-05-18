@@ -14,7 +14,7 @@ pub type Paths = Vec<Path>;
 /// The underlying shape is use to determine visibility of the
 /// paths. Rendering is thus only guaranteed if the points of the path
 /// lie 'on' the shape within some tolerance.
-pub trait Shape {
+pub trait Shape: Send + Sync {
     /// Ray-intersection
     fn intersect(&self, ray: &Ray<f64>, max_toi: f64) -> Option<f64>;
 

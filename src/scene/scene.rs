@@ -27,11 +27,24 @@ impl SceneBuilder {
         SceneBuilder::default()
     }
 
+    /// Add a single shape.
     pub fn add<S: Shape + 'static>(mut self, shape: S) -> Self {
         self.shapes.push(Box::new(shape));
         self
     }
 
+    /// Add many shapes.
+    pub fn append<S: Shape + 'static, I>(mut self, shapes: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+    {
+        for s in shapes.into_iter() {
+            self.shapes.push(Box::new(s));
+        }
+        self
+    }
+
+    /// Build the final scene.
     pub fn build(self) -> Scene {
         Scene::new(self.shapes)
     }
@@ -268,7 +281,7 @@ impl Scene {
         for p in paths {
             g = g.add(
                 svg::node::element::Polyline::new()
-                    .set("d", format_svg_poly_data(&p, dim.0, dim.1)),
+                    .set("points", format_svg_poly_data(&p, dim.0, dim.1)),
             );
         }
         g

@@ -15,7 +15,6 @@ ncollide3d = "0.28"
 nalgebra = "0.25"
 anyhow = "*"
 thiserror = "*"
-art-util = { path = "/home/mason/workspace/art-util/" }
 approx = "*"
 
 [dependencies.svg]

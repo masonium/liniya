@@ -1,11 +1,8 @@
 //! Perspective or orthographic cameras for rendering scenes
 use super::common::*;
+use crate::frustum::{ClipResult, ClipResultPartial, Frustum};
 use crate::shape::Path;
 use crate::util::box_plane_intersection;
-use art_util::{
-    frustum::{ClipResult, ClipResultPartial},
-    Frustum,
-};
 
 /// `Camera` determines the view and projection of a scene during
 /// rendering.
