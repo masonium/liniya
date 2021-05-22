@@ -16,6 +16,7 @@ nalgebra = "0.25"
 anyhow = "*"
 thiserror = "*"
 approx = "*"
+itertools = "*"
 
 [dependencies.svg]
 optional = true

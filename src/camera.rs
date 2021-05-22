@@ -3,6 +3,7 @@ use super::common::*;
 use crate::frustum::{ClipResult, ClipResultPartial, Frustum};
 use crate::shape::Path;
 use crate::util::box_plane_intersection;
+use itertools::Itertools;
 
 /// `Camera` determines the view and projection of a scene during
 /// rendering.
@@ -206,6 +207,13 @@ impl Camera {
 
         // transform the camera space point to NDC
         self.projection.transform_point(&camera_point)
+    }
+
+    /// Return the area of a 3d polygon in projected onto 2d
+    /// coordinates, in NDC.
+    pub fn projected_area(&self, points: &[Point3<f64>]) -> f64 {
+	points.iter().map(|p| self.project(p)).circular_tuple_windows()
+	    .map(|(a, b)| 0.5 * (a.x * b.y - a.y * b.x)).sum()
     }
 }
 
